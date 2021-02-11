@@ -3,6 +3,7 @@ from discord.ext import tasks
 from discord import Embed
 from asyncpgw import general
 from datetime import datetime, timedelta
+from asyncio import TimeoutError
 
 #pylint: disable=import-error
 from utils import datas, embed, dget
@@ -10,7 +11,7 @@ from utils import datas, embed, dget
 
 bump = """bump(
     server bigint,
-    notice boolean DEFAULT False
+    notice boolean DEFAULT True,
     enable boolean DEFAULT True,
     night_enable boolean DEFAULT True,
     mention boolean DEFAULT True,
@@ -147,25 +148,28 @@ class Notice(c.Cog, name='通知'):
 
     @c.Cog.listener()
     async def on_message(self, mes_bot):
-        if mes_bot.author.id != self.bot.user.id:
-            return
-
-        if not mes_bot.embeds:
-            return
 
         notice_now = datetime.now()
 
-        for e in mes_bot.embeds:
-            if e.title == Embed.Empty:
+        if await mes_bot.channel.history(limit=3).get(author__id=self.bot.user.id):
+            if mes_bot.author.id != self.bot.user.id:
                 return
-            
-            if 'ランキングにチャレンジ！' not in e.title:
+            if not mes_bot.embeds:
                 return
+            for e in mes_bot.embeds:
+                if e.title == Embed.Empty:
+                    return
+                
+                if 'ランキングにチャレンジ！' not in e.title:
+                    return
 
         def mes_check(m):
             return not m.author.bot and m.channel == mes_bot.channel and m.content == '!d bump'
 
-        mes = await self.bot.wait_for('message', check=mes_check)
+        try:
+            mes = await self.bot.wait_for('message', check=mes_check, timeout=60)
+        except TimeoutError:
+            return
 
         if not await self.bump.fetch(server=mes.guild.id, notice=True):
             return
@@ -173,7 +177,10 @@ class Notice(c.Cog, name='通知'):
         def check(m):
             return m.author.id == self.disboard and m.channel == mes.channel
 
-        m = await self.bot.wait_for('message', check=check)
+        try:
+            m = await self.bot.wait_for('message', check=check, timeout=60)
+        except TimeoutError:
+            return
 
         if m.author.id != self.disboard:
             return

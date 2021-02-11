@@ -8,10 +8,10 @@ from asyncio import gather, TimeoutError
 from utils import embed
 
 
-member_time = """
+member_time = """ member_time(
     member bigint,
     latest_time timestamp
-"""
+)"""
 
 global_count = """global_count(
     member bigint,
@@ -34,9 +34,9 @@ class Ranking(c.Cog, name='ランキング'):
         self.contents = ['グローバルランキング', 'サーバーランキング']
 
         self.emojis = {
-            "next": "\U000023e9",
-            "back": "\U000023ea",
             "first": "\U000023ee",
+            "back": "\U000023ea",
+            "next": "\U000023e9",
             "last": "\U000023ed"
         }
 
@@ -199,7 +199,7 @@ class Ranking(c.Cog, name='ランキング'):
         return e
 
 
-    @c.command(aliases=['ranking', 'ランク', 'ランキング', 'らんく', 'ランキング'])
+    @c.command(aliases=['ranking', 'ランク', 'ランキング', 'らんく', 'らんきんぐ'])
     async def rank(self, ctx):
         """BUMPのランキングを表示"""
 
@@ -260,3 +260,5 @@ class Ranking(c.Cog, name='ランキング'):
 def setup(bot):
     bot.add_cog(Ranking(bot))
     bot.add_table(member_time)
+    bot.add_table(global_count)
+    bot.add_table(count)

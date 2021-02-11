@@ -11,35 +11,12 @@ intent = Intents.all()
 class Bumper_Main(c.Bot):
     def __init__(self):
         super().__init__(
-            command_prefix = None,
+            command_prefix = 'b:',
             description = 'BUMPの通知をしたり、ランキングにしたりするBOT',
             intents=intent
         )
 
         self.tables = []
-
-        prefix_table = """
-            server bigint,
-            prefixes text[]  DEFAULT array[] :: text[]
-        """
-
-        self.add_table(prefix_table)
-
-
-    async def prefix_callble(self, bot, mes):
-        guild = mes.guild
-
-        if not guild:
-            return 'b:'
-
-        prefix = general.Pg(self, 'prefix')
-
-        if not (prefixes := await prefix.fetch(server=guild.id)):
-            await prefix.insert(server=guild.id)
-            await prefix.add(prefixes='b:', server=guild.id)
-            return 'b:'
-
-        return prefixes['prefixes']
 
 
     async def ps_connect(self):
@@ -47,7 +24,7 @@ class Bumper_Main(c.Bot):
 
     
     def add_table(self, table):
-        if table in self.tables:
+        if table not in self.tables:
             self.tables.append(table)
 
 
@@ -88,8 +65,12 @@ class Bumper_Main(c.Bot):
     async def on_ready(self):
         print('起動しました')
 
+        self.cog_load()
+
         for table in self.tables:
             await start.create(self.pool, table)
+         
+
 
     
     async def start(self):
